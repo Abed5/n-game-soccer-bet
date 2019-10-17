@@ -1,0 +1,215 @@
+#Loads results of previous jackpots into row_results
+with open('results.txt',mode='r') as f:
+    results = f.readlines()
+
+row_results = [] #Results of jackpot games arranged in 131 rows
+for i in range(0,int(len(results)/18)):
+    a = []
+    for j in range(0,17):
+        if results[i*18+j][0]=='1' or results[i*18+j][0]=='2' or results[i*18+j][0]=='3':
+            a.append(int(results[i*18+j][0]))
+        else:
+            a.append(0)
+    row_results.append(a)
+    continue
+print(len(row_results))
+
+
+with open('picks_clean.txt',mode='r') as f:
+    picks = f.readlines()
+
+row_picks = [] #Results of jackpot picks arranged in 131 rows
+for i in range(0,int(len(picks)/18)):
+    a = []
+    for j in range(0,17):
+        if picks[i*18+j][0] not in '123':
+            a.append([0])
+        else:
+            if len(picks[i*18+j])==2:
+                a.append([int(picks[i*18+j][0])])
+            else:
+                a.append([int(picks[i*18+j][0]),int(picks[i*18+j][1])])
+    row_picks.append(a)
+    continue
+print(len(row_picks))
+
+
+with open('Hit_templates1.txt', mode = 'r') as f:
+    my_hits_templates = f.read().split()
+    
+
+import copy
+import numpy as np
+from random  import sample
+from  itertools import product
+
+
+
+#Counts the number of consecutive occurrences of the elements
+
+from itertools import groupby
+
+def group(xs):
+    groups = groupby(xs)
+    result = [(label, sum(1 for _ in group)) for label, group in groups]
+    return result
+
+#Returns grouping of a single list
+def counter(my_list,group_length):
+    if group_length>len(my_list):
+        return('Error: Group length is longer than length of list!!')
+    e = []
+    d = copy.deepcopy(my_list)
+    for g in range(group_length):
+        b = [str(''.join(map(str,(d[n+g:n+group_length+g])))) for n in range(0, len(d)-g, group_length)]
+        d.append(my_list[g])
+        c = group(b)
+        e.append(c)
+    return e
+
+#Returns groupings of a list of lists
+def multiplecounter(my_list_of_lists,group_length):
+    return [counter(i,group_length) for i in my_list_of_lists]
+
+#Returns True if a grouping of a single list has more incidences than limit, otherwise false
+def counterFlag(my_list,group_length,limit):
+    my_group = counter(my_list,group_length)
+    for i in my_group:
+        for j in i:
+            if j[1]>limit:
+                return True
+    return False
+
+#Applies counterFlag to a list of lists
+def multipleCounterFlag(my_list_of_lists, group_length,limit):
+    return [counterFlag(i,group_length,limit) for i in my_list_of_lists]
+
+#Applies counterflag to a single list using a list of limits
+from IPython.display import clear_output
+def product_checker(my_product,my_limits):
+     
+    for i in range(0,8):
+        if counterFlag(my_product,i+1,my_limits[i]):
+            return True
+    return False
+
+#Returns a list of possiblities from games17_num file
+#directory = 'C:\\Users\\Abed\\Documents\\Game perms\\game_17\\games17_'
+#directory = 'clean_games17_'
+directory = 'cleaner_games17_'
+def text_to_variable(number):
+    clear_output()
+    print(number)
+    with open(directory+str(number)+'.txt',mode='r') as f:
+        return [i for i in f.read().split()]
+  
+ # Creates a dictionary that counts number of correct predictions
+def countconf(xs):
+    mydict = {}
+    mydict[0] = xs.count(0)
+    mydict[1] = xs.count(1)
+    mydict[2] = xs.count(2)
+    mydict[3] = xs.count(3)
+    mydict[4] = xs.count(4)
+    mydict[5] = xs.count(5)
+    mydict[6] = xs.count(6)
+    mydict[7] = xs.count(7)
+    mydict[8] = xs.count(8)
+    mydict[9] = xs.count(9)
+    mydict[10] = xs.count(10)
+    mydict[11] = xs.count(11)
+    mydict[12] = xs.count(12)
+    mydict[13] = xs.count(13)
+    mydict[14] = xs.count(14)
+    mydict[15] = xs.count(15)
+    mydict[16] = xs.count(16)
+    mydict[17] = xs.count(17)
+
+    return mydict
+
+
+def str_to_list(string):
+    return [int(i) for i in string]
+
+def replace(my_list):
+    for i in range(len(my_list)):
+        if my_list[i]==0:
+            my_list[i]=4
+            
+            
+def normPos_to_dictPos(normPos):
+    for i in my_ranges:
+        if normPos in i:
+            return str_to_list(my_possibilities_dict[my_ranges.index(i)+1][normPos-min(i)])
+        
+        
+def sum_n_average_checker(my_list):
+    if 37>sum(my_list)>28:
+        return 8>my_list.count(1)>4 and 7>my_list.count(2)>3 and 7>my_list.count(3)>3
+    else:
+        return False
+    
+    
+#returns true if a possibility satisfies a prediction according to a given template
+def template_to_prediction(template,prediction,possibility):
+    for i in range(len(template)):
+        if template[i] == 1:
+            
+            if len(prediction[i]) == 1:
+                if possibility[i] != prediction[i][0]:
+                    return False
+            else:
+                if possibility[i] != prediction[i][0] and possibility[i] != prediction[i][1]:
+                    return False
+    return True
+
+#Returns the number of correct predictions for a jackpot result
+def numHits(result,prediction):
+    temp = []
+    for j in range(len(result)):
+        if result[j] in prediction[j]:
+            temp.append(1)
+        else:
+            temp.append(0)
+    return(sum(temp))
+    
+    
+    
+numBets = 3  #Number of bets per template
+bets_sample = []
+
+#print(n)
+#print(my_prediction)
+
+print('0\n')
+for l in sample:
+    [print(n[i],my_prediction[i],l[i]) for i in range(17)]
+    print('Number of correct hits from prediction is: '+str(numHits(n,my_prediction)))
+    template_prediction = [my_prediction[i] for i in range(17)  if l[i] == 1 ]
+    template_result = [n[i] for i in range(17) if l[i] == 1]
+    print('Number of correct hits from template is: '+str(numHits(template_result,template_prediction)))
+    print('\n')
+    for i in range(numBets):
+            k = normPos_to_dictPos(np.random.randint(0, len_dict))
+            #print(str(k)+' '+str(counter))
+            counter+=1
+            while not (k not in bets_sample and template_to_prediction(l,my_prediction,k)):
+                #print(str(k)+' '+str(counter2))
+                counter2+=1
+                k = normPos_to_dictPos(np.random.randint(0, len_dict))
+            bets_sample.append(k)
+            print(i)
+    clear_output()
+    print(str(sample.index(l)+1)+'\n')  
+    
+    
+print(counter2)
+def compare (x1):
+    truefalsearr = np.array(x1) == np.array(n)
+    return list(truefalsearr).count(True)
+
+conf = []
+for i in bets_sample:
+    conf.append(compare(i))
+
+print(countconf(conf))
